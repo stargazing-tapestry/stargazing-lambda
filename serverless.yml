@@ -47,12 +47,19 @@ provider:
 #    - exclude-me-dir/**
 
 functions:
-  hello:
+  listName:
+    handler: handler.listName
+    events:
+    - http:
+        path: listName
+        method: get
+        cors: true
+  starGaze:
     handler: handler.starGaze
     events:
     - http:
         path: starGaze
-        method: get
+        method: post
         cors: true
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
@@ -88,7 +95,7 @@ functions:
       AWS_IOT_ENDPOINT: 'a1gf6an104qasm.iot.ap-southeast-2.amazonaws.com'
 
 # you can add CloudFormation resource templates here
-#resources:
+#resources:  # CloudFormation template syntax
 #  Resources:
 #    NewResource:
 #      Type: AWS::S3::Bucket
