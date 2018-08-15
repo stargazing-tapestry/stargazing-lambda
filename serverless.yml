@@ -47,11 +47,11 @@ provider:
 #    - exclude-me-dir/**
 
 functions:
-  listName:
-    handler: handler.listName
+  listConstellations:
+    handler: handler.listConstellations
     events:
     - http:
-        path: listName
+        path: constellations
         method: get
         cors: true
   starGaze:
