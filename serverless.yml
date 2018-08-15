@@ -84,8 +84,8 @@ functions:
 #          trigger: PreSignUp
 
 #    Define function environment variables here
-#    environment:
-#      variable2: value2
+    environment:
+      AWS_IOT_ENDPOINT: 'a1gf6an104qasm.iot.ap-southeast-2.amazonaws.com'
 
 # you can add CloudFormation resource templates here
 #resources:

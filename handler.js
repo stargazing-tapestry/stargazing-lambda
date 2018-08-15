@@ -1,6 +1,6 @@
 'use strict';
 const AWS = require('aws-sdk');
-const iotData = new AWS.IotData({endpoint: 'a1gf6an104qasm.iot.ap-southeast-2.amazonaws.com'});
+const iotData = new AWS.IotData({endpoint: process.env.AWS_IOT_ENDPOINT});
 
 module.exports.starGaze = (event, context, callback) => {
     const params = {
