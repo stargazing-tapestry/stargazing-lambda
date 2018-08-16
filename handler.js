@@ -33,36 +33,35 @@ module.exports.starGaze = (event, context, callback) => {
     };
 
     //Convert colour from html to rgb binanry
-    const convertColour = (htmlColour) => {
-        var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(htmlColour);
-        return result ? [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)] : null;
-    }
+    const convertColour = (hexColor) => {
+        const matched = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hexColor);
+        return matched ? [parseInt(matched[1], 16), parseInt(matched[2], 16), parseInt(matched[3], 16)] : null;
+    };
 
-    const input = parseInput(event.body)
+    const publishLedCommand = (ledArray, colour) => {
+        let result = [];
+        ledArray.forEach(i => {
+            result = result.concat(convertColour(colour), (i >> 8) & 0xff, i & 0xff)
+        });
+        console.log("found mapping", ledArray, result, colour);
+        publishMessage(Buffer.from(result))
+    };
+
+    const input = parseInput(event.body);
 
     if (input) {
-        const constellation = input['constellation']
-        const colour = input['colour']
+        const {constellation, colour} = input;
 
         if (constellation && colour) {
-            const payload = mapping[constellation.toLowerCase()]
-            if (payload) {
-                let result = []
-                let binaryColour = convertColour(colour)
-                let binaryArray = payload.forEach(i => {
-                    result = result.concat(binaryColour)
-                    result.push((i >> 8) & 0xff)
-                    result.push(i & 0xff)
-                });
-                console.log(result, binaryColour)
-                console.log("found mapping" , payload)
-                publishMessage(Buffer.from(result))
+            const ledArray = mapping[constellation.toLowerCase()];
+            if (ledArray) {
+                publishLedCommand(ledArray, colour);
             } else {
-                console.log("couldn't find mapping" , constellation)
+                console.log("couldn't find mapping" , constellation);
                 callback(null, acceptedResp)
             }
         } else {
-            console.log("couldn't find constellation input", event.body)
+            console.log("couldn't find constellation input", event.body);
             callback(null, acceptedResp)
         }
     } else {
