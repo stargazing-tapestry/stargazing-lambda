@@ -12,3 +12,5 @@ This is the Lambda for REA IO 31 star Gazing project.
 2. to deploy
 
 `Authenticate to AWS` and `sls deploy`
+
+`rea-as saml REAio sls deploy`
