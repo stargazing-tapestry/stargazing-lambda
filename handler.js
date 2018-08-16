@@ -28,21 +28,19 @@ module.exports.starGaze = (event, context, callback) => {
             return JSON.parse(stringInput);
         } catch (e) {
             return null
-
         }
     };
 
-    //Convert colour from html to rgb binanry
+    //Convert colour from html to rgb binary
     const convertColour = (hexColor) => {
         const matched = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hexColor);
         return matched ? [parseInt(matched[1], 16), parseInt(matched[2], 16), parseInt(matched[3], 16)] : null;
     };
 
     const publishLedCommand = (ledArray, colour) => {
-        let result = [];
-        ledArray.forEach(i => {
-            result = result.concat(convertColour(colour), (i >> 8) & 0xff, i & 0xff)
-        });
+        const result = ledArray
+            .map(i => [...convertColour(colour), (i >> 8) & 0xff, i & 0xff])
+            .reduce((x, y) => x.concat(y), []);
         console.log("found mapping", ledArray, result, colour);
         publishMessage(Buffer.from(result))
     };
@@ -54,12 +52,7 @@ module.exports.starGaze = (event, context, callback) => {
 
         if (constellation && colour) {
             const ledArray = mapping[constellation.toLowerCase()];
-            if (ledArray) {
-                publishLedCommand(ledArray, colour);
-            } else {
-                console.log("couldn't find mapping" , constellation);
-                callback(null, acceptedResp)
-            }
+            ledArray ? publishLedCommand(ledArray, colour) : callback(null, acceptedResp)
         } else {
             console.log("couldn't find constellation input", event.body);
             callback(null, acceptedResp)
