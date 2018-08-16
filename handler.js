@@ -13,7 +13,7 @@ module.exports.starGaze = (event, context, callback) => {
         callback(null, acceptedResp);
     };
 
-    const publishMessage = function (payload) {
+    const publishMessage = (payload) => {
         const iotData = new AWS.IotData({endpoint: process.env.AWS_IOT_ENDPOINT});
         const params = {
             topic: 'test_topic',
@@ -23,7 +23,7 @@ module.exports.starGaze = (event, context, callback) => {
         iotData.publish(params, responseCallback);
     };
 
-    const parseInput = function (stringInput) {
+    const parseInput = (stringInput) => {
         try {
             return JSON.parse(stringInput);
         } catch (e) {
@@ -33,7 +33,7 @@ module.exports.starGaze = (event, context, callback) => {
     };
 
     //Convert colour from html to rgb binanry
-    const convertColour = function (htmlColour) {
+    const convertColour = (htmlColour) => {
         var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(htmlColour);
         return result ? [parseInt(result[1], 16), parseInt(result[2], 16), parseInt(result[3], 16)] : null;
     }
