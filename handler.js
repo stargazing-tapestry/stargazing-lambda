@@ -74,7 +74,7 @@ module.exports.starGaze = (event, context, callback) => {
 module.exports.listConstellations = (event, context, callback) => {
     const response = {
         statusCode: 200,
-        body: JSON.stringify(Object.keys(mapping))
+        body: JSON.stringify(Object.keys(mapping).filter(k => mapping[k].length > 0))
     };
 
     callback(null, response);
