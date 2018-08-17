@@ -3,33 +3,38 @@ const AWS = require('aws-sdk');
 const mapping = require('mapping_data');
 
 
-module.exports.starGaze = (event, context, callback) => {
-    const acceptedResp = {
-        statusCode: 201
-    };
+module.exports.starGaze = async (event, context) => {
+    console.log("couldn't find constellation input", event.body);
 
-    const responseCallback = (err, res) => {
-        if (err) return context.fail(err);
-        callback(null, acceptedResp);
-    };
+    const acceptedResp = {statusCode: 201};
+    const badRequestResp = {statusCode: 400};
 
-    const publishMessage = (payload) => {
+    const responseCallback = async (err) => (
+        new Promise((resolve, reject) => {
+            if (err) return reject(err);
+            return resolve();
+        }));
+
+    const publishMessage = async (payload) => {
         const iotData = new AWS.IotData({endpoint: process.env.AWS_IOT_ENDPOINT});
         const params = {
             topic: 'test_topic',
             payload: payload
         };
 
-        iotData.publish(params, responseCallback);
+        await iotData.publish(params, responseCallback);
     };
 
-    const parseInput = (stringInput) => {
-        try {
-            return JSON.parse(stringInput);
-        } catch (e) {
-            return null
-        }
-    };
+    const parseInput = async (stringInput) => (
+        new Promise((resolve, reject) => {
+            try {
+                return resolve(JSON.parse(stringInput));
+            } catch (e) {
+                return reject(e);
+            }
+        })
+
+    );
 
     //Convert colour from html to rgb binary
     const convertColour = (hexColor) => {
@@ -37,29 +42,32 @@ module.exports.starGaze = (event, context, callback) => {
         return matched ? [parseInt(matched[1], 16), parseInt(matched[2], 16), parseInt(matched[3], 16)] : null;
     };
 
-    const publishLedCommand = (ledArray, colour) => {
+    const publishLedCommand = async (ledArray, colour) => {
         const result = ledArray
             .map(i => [...convertColour(colour), (i >> 8) & 0xff, i & 0xff])
             .reduce((x, y) => x.concat(y), []);
         console.log("found mapping", ledArray, result, colour);
-        publishMessage(Buffer.from(result))
+        await publishMessage(Buffer.from(result));
     };
 
-    const input = parseInput(event.body);
+    let input;
 
-    if (input) {
-        const {constellation, colour} = input;
-
-        if (constellation && colour) {
-            const ledArray = mapping[constellation.toLowerCase()];
-            ledArray ? publishLedCommand(ledArray, colour) : callback(null, acceptedResp)
-        } else {
-            console.log("couldn't find constellation input", event.body);
-            callback(null, acceptedResp)
-        }
-    } else {
-        callback(null, {statusCode: 400})
+    try {
+        input = await parseInput(event.body);
+    } catch (e) {
+        return badRequestResp;
     }
+
+    const {constellation, colour} = input;
+
+    if (constellation && colour) {
+        const ledArray = mapping[constellation.toLowerCase()];
+        if (ledArray) {
+            await publishLedCommand(ledArray, colour)
+        }
+    }
+
+    return acceptedResp;
 
 };
 
