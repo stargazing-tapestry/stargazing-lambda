@@ -3,19 +3,13 @@ const AWS = require('aws-sdk');
 const mapping = require('mapping_data');
 
 
-module.exports.starGaze = async (event, context) => {
+module.exports.starGaze = async (event) => {
     console.log("couldn't find constellation input", event.body);
 
-    const acceptedResp = {statusCode: 201};
-    const badRequestResp = {statusCode: 400};
-
-    const responseCallback = async (err) => (
-        new Promise((resolve, reject) => {
-            if (err) return reject(err);
-            return resolve();
-        }));
-
     const publishMessage = async (payload) => {
+        const responseCallback = async (err) =>
+            (new Promise((resolve, reject) => { return err ? reject(err) : resolve();}));
+
         const iotData = new AWS.IotData({endpoint: process.env.AWS_IOT_ENDPOINT});
         const params = {
             topic: 'test_topic',
@@ -24,17 +18,6 @@ module.exports.starGaze = async (event, context) => {
 
         await iotData.publish(params, responseCallback);
     };
-
-    const parseInput = async (stringInput) => (
-        new Promise((resolve, reject) => {
-            try {
-                return resolve(JSON.parse(stringInput));
-            } catch (e) {
-                return reject(e);
-            }
-        })
-
-    );
 
     //Convert colour from html to rgb binary
     const convertColour = (hexColor) => {
@@ -53,9 +36,9 @@ module.exports.starGaze = async (event, context) => {
     let input;
 
     try {
-        input = await parseInput(event.body);
+        input = JSON.parse(event.body);
     } catch (e) {
-        return badRequestResp;
+        return { statusCode: 400 };
     }
 
     const {constellation, colour} = input;
@@ -67,15 +50,13 @@ module.exports.starGaze = async (event, context) => {
         }
     }
 
-    return acceptedResp;
+    return { statusCode: 201 };
 
 };
 
-module.exports.listConstellations = async (event) => {
-    const response = {
+module.exports.listConstellations = async () => {
+    return {
         statusCode: 200,
         body: JSON.stringify(Object.keys(mapping).filter(k => mapping[k].length > 0))
     };
-
-    return response;
 };
